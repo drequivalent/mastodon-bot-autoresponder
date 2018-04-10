@@ -24,6 +24,7 @@ class Config:
         self.access_token = json['access_token']
 
         self.admins = json['admins']
+        self.message_welcome = json['message_welcome']
         self.message = json['message'] + ''.join(' @' + admin for admin in self.admins)
 
         self.state_file = json['state_file']
@@ -78,6 +79,12 @@ def run_bot(config):
     with open(config.state_file, 'a') as state_file:
         while True:
             notifications = api.notifications()
+            my_account=api.account_verify_credentials()
+            followers = api.account_followers(my_account.id)
+            follower_list=[]
+            for follower in followers:
+                follower_list.append(follower.acct)
+
             ln_changed = False
 
             if isinstance(notifications, dict) and ('error' in notifications):
@@ -96,15 +103,23 @@ def run_bot(config):
                 for notification in notifications[::-1]:
                     if int(notification['id']) <= last_notification:
                         continue
+                    if notification['type'] == 'follow':
+                        print("Welcomed new follower: " + notification.account.acct)
+                        response_sent = api.status_post('{}@{}'.format(config.message_welcome, notification.account.acct))
+                        last_notification = int(notification['id'])
+                        ln_changed = True
+                        continue
                     if notification['type'] != 'mention':
                         continue
 
                     sender = notification['status']['account']['acct']
 
-                    if sender in config.admins:
+                    if sender in follower_list:
                         if notification['status']['visibility'] != 'public' :
                             continue
-                        # We received a public announcement from admins, we should boost it
+                        elif notification['status']['in_reply_to_id'] != None:
+                            continue
+                        # We received a message from a group member, we should boost it
                         api.status_reblog(notification['status']['id'])
                     else:
                         if set(config.admins) & {account['acct'] for account in notification['status']['mentions']}:
@@ -147,7 +162,8 @@ def run_bot(config):
                 state_file.write(str(last_notification))
                 state_file.flush()
 
-            time.sleep(60)
+            time.sleep(10)
+
 
 
 def main():

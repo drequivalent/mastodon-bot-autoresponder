@@ -1,15 +1,17 @@
-# mastodon autoresponder bot
+# mastodon group bot
 
-This bot was developed for [mastodon.mit.edu](https://mastodon.mit.edu), where people sometimes message @mastodon, the official announcement account, but the maintainers are too lazy to actually monitor it.
+This is a bot that implements group functionality in Mastodon.
+
+This bot was based on the code developed for [mastodon.mit.edu](https://mastodon.mit.edu), where people sometimes message @mastodon, the official announcement account, but the maintainers are too lazy to actually monitor it.
 
 The bot is written in Python 3 and uses [Mastodon.py](https://github.com/halcy/Mastodon.py) and [beautifulsoup4](https://www.crummy.com/software/BeautifulSoup/).
 
 The bot can do the following:
 
-- respond to every toot sent to it by a non-admin with a predefined message mentioning the admins
+- respond to every toot sent to it by a non-follower with a predefined message mentioning the admins
     - regardless of the visibility setting of the response, the response is always sent as a DM. because of how DMs work, if the predefined message includes other peple's usernames, they'll also see the DM!
-- if it receives a DM from a non-admin, it can forward the text of that DM to the admins
-- it can boost public announcement toots by admins that mention it
+- if it receives a DM from a non-follower, it can forward the text of that DM to the admins
+- it can boost toots by followers that mention it
 
 The bot will not respond retroactively, i.e., the first time you run it, it will not respond to all the messages your account has received in the past.
 
@@ -24,8 +26,9 @@ The bot is configured in a JSON file that looks like this:
     "client_secret": "a7e...6b7",
     "access_token": "9af...d33",
 
-    "message": "[robot voice] beep boop, this account isn't monitored regularly! forwarding this in a DM to our human maintainers:",
-    "admins": ["aleksejs", "dukhovni"],
+    "message": "Hello, I'm a group bot. Follow me and then write sonething, and I will boost it. The admins of the group are:",
+    "message_welcome" : "Welcome our new member:",
+    "admins": ["drequivalent"],
 
     "state_file": "/home/mastodon/autoresponder/state"
 }
