@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import argparse
 import datetime
 import json
@@ -80,7 +81,7 @@ def run_bot(config):
         while True:
             notifications = api.notifications()
             my_account=api.account_verify_credentials()
-            followers = api.account_followers(my_account.id)
+            followers = api.fetch_remaining(api.account_followers(my_account.id, limit=60))
             follower_list=[]
             for follower in followers:
                 follower_list.append(follower.acct)
@@ -114,6 +115,12 @@ def run_bot(config):
 
                     sender = notification['status']['account']['acct']
 
+                    print('Received status {} from {}.'.format(
+                        notification['status']['id'],
+                        notification['status']['account']['acct']))
+
+                    #print(follower_list)
+
                     if sender in follower_list:
                         if notification['status']['visibility'] != 'public' :
                             continue
@@ -124,6 +131,7 @@ def run_bot(config):
                     else:
                         if set(config.admins) & {account['acct'] for account in notification['status']['mentions']}:
                             # An admin is already mentioned, no need to forward this message
+                            print("User {} is already in admins list".format(notification['status']['account']['acct']))
                             continue
 
                         response = '@{} {}'.format(
